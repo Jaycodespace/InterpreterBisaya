@@ -18,7 +18,7 @@ Ensure you have the following installed:
 2. **Navigate to the Project Directory**:
    - Go to the `interpreter` folder:
      ```bash
-     cd InterpreterBisayaPlusPlus/interpreter
+     cd InterpreterBisaya++/interpreter
      ```
 
 3. **Install Dependencies**:

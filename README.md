@@ -45,17 +45,5 @@ Ensure you have the following installed:
      ```
 
 ### Sample Bisaya++ Program
+     Can be found in the `examples/sample.bpp` file
 
-Here’s a simple **Bisaya++** program that can be found in the `examples/sample.bpp` file:
-
-```bpp
--- this is a sample program in Bisaya++
-SUGOD
-MUGNA NUMERO x, y, z=5
-MUGNA LETRA a_1='n'
-MUGNA TINUOD t="OO"
-x=y=4
-a_1='c'
--- this is a comment
-IPAKITA: x & t & z & $ & a_1 & [#] & "last"
-KATAPUSAN

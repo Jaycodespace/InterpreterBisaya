@@ -1,5 +1,16 @@
 # Bisaya++ Interpreter
 
+## Overview
+
+The Bisaya++ Interpreter is an implementation of a **strongly-typed, high-level programming language** designed to teach the basics of programming using Cebuano (Bisaya) keywords. This interpreter allows you to run **Bisaya++** programs, which have simple syntax and native Cebuano keywords. 
+
+### Features:
+- **Variable Declarations** with types like `NUMERO`, `LETRA`, and `TINUOD`.
+- **Conditional Statements** (`KUNG`, `KUNG WALA`, `KUNG DILI`). (NOT YET IMPLEMENTED)
+- **Loops** (`ALANG SA` for `for` loops). (NOT YET IMPLEMENTED)
+- **Arithmetic and Logical Operations**.
+- **Input/Output** with `DAWAT` for input and `IPAKITA` for output.
+  
 ## How to Run the Program
 
 ### Prerequisites
@@ -30,26 +41,21 @@ Ensure you have the following installed:
 4. **Run the Program**:
    - Execute the program with Node.js:
      ```bash
-     node main.js
+     node interpreter/index.js
      ```
 
 ### Sample Bisaya++ Program
 
-You can use the following sample program to test the interpreter:
+Here’s a simple **Bisaya++** program that can be found in the `examples/sample.bpp` file:
 
-```javascript
-const program = `
+```bpp
+-- this is a sample program in Bisaya++
 SUGOD
-    MUGNA NUMERO x, y, z = 5
-    MUGNA LETRA a_1 = 'n'
-    MUGNA TINUOD t = "OO"
-    x = 4
-    y = 4
-    a_1 = 'c'
-    IPAKITA: x & t & z & $ & a_1 & [#] & "last"
+MUGNA NUMERO x, y, z=5
+MUGNA LETRA a_1='n'
+MUGNA TINUOD t="OO"
+x=y=4
+a_1='c'
+-- this is a comment
+IPAKITA: x & t & z & $ & a_1 & [#] & "last"
 KATAPUSAN
-`;
-
-const ast = parse(program);
-const result = execute(ast);
-console.log(result);

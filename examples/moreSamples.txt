@@ -24,3 +24,11 @@ d = (a < b UG c <>200)
 IPAKITA: d
 KATAPUSAN
 
+SUGOD
+MUGNA NUMERO x, y
+DAWAT: x, y
+MUGNA NUMERO result
+result = x + y
+IPAKITA: "The sum of " & x & " and " & y & " is " & result
+KATAPUSAN
+

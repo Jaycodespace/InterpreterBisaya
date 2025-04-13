@@ -1,6 +1,7 @@
 SUGOD
-MUGNA NUMERO a=100, b=200, c=300
-MUGNA TINUOD d=”DILI”
-d = (a < b UG c <>200)
-IPAKITA: d
+MUGNA NUMERO x, y
+DAWAT: x, y
+MUGNA NUMERO result
+result = x + y
+IPAKITA: "The sum of " & x & " and " & y & " is " & result
 KATAPUSAN

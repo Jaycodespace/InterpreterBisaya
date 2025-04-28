@@ -1,18 +1,17 @@
 SUGOD
-MUGNA NUMERO i
-MUGNA NUMERO sum
-MUGNA NUMERO limit
+MUGNA NUMERO ctr
+MUGNA NUMERO sum = 0
+MUGNA NUMERO average = 0
 
-DAWAT: limit
-i = 1
-sum = 0
-
-SAMTANG (i <= limit)
+ALANG SA (ctr = 0, ctr < 10, ctr++)
 PUNDOK{
-    sum = sum + i
-    IPAKITA: "Current value of sum: " & sum
-    i = i + 1
+    sum = sum + ctr
 }
+sum = sum + ctr
 
-IPAKITA: "Final sum: " & sum
+average = sum / 11
+
+IPAKITA: sum
+IPAKITA: ctr
+IPAKITA: average
 KATAPUSAN

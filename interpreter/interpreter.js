@@ -55,13 +55,29 @@ function handleDeclaration(line, env) {
 }
 
 function handleAssignment(line, env) {
+  // Check if the line is a valid string and contains an assignment operator '='
+  if (typeof line !== 'string') {
+    throw new Error(`Expected a string for assignment, but got: ${typeof line}`);
+  }
+
+  if (!line.includes('=')) {
+    throw new Error(`Invalid assignment syntax, '=' operator missing in line: ${line}`);
+  }
+
   const parts = line.split('=').map(s => s.trim());
-  const targetVars = parts.slice(0, -1);
-  const expression = parts.at(-1);
+
+  // Ensure the assignment is in the correct format (at least a variable and a value)
+  if (parts.length < 2) {
+    throw new Error(`Invalid assignment, expected "variable = value" format but got: ${line}`);
+  }
+
+  const targetVars = parts.slice(0, -1); // All but the last part are variable names
+  const expression = parts.at(-1); // Last part is the expression to assign
 
   const tokens = tokenizeExpression(expression);
   let value;
 
+  // Handle string literals and evaluate the expression
   if (expression.startsWith("'") || expression.startsWith('"')) {
     value = cleanLiteral(expression);
   } else {
@@ -79,16 +95,18 @@ function handleAssignment(line, env) {
     }).join(' ');
 
     try {
-      value = eval(evaluatedExpression);
+      value = eval(evaluatedExpression); // Evaluate the expression
     } catch (e) {
       throw new Error(`Invalid expression: "${expression}" → "${evaluatedExpression}"`);
     }
   }
 
+  // Assign the evaluated value to the target variables
   for (let i = targetVars.length - 1; i >= 0; i--) {
     env.assign(targetVars[i], value);
   }
 }
+
 
 
 function handlePrint(expr, env) {
@@ -240,61 +258,80 @@ function handleConditional(node, env, previousConditionResult = false) {
 
 
 function handleLoop(node, env) {
-  const line = node.line;  // The line associated with the loop (should be a string)
+  const line = node.line.trim(); // The line associated with the loop
 
   if (typeof line !== 'string') {
-      throw new Error(`Expected a string for loop condition, but got: ${typeof line}`);
+    throw new Error(`Expected a string for loop condition, but got: ${typeof line}`);
   }
 
-  // Ensure line is in the expected format
-  const conditionExpr = line.slice(7).trim(); // Remove "SAMTANG " from the start
-  const conditionTokens = tokenizeExpression(conditionExpr); // Tokenize the condition expression
+  if (line.startsWith('ALANG SA')) {
+    const loopExpr = line.slice(10, -1).trim(); // Remove "ALANG SA (" and ")" from start and end
+    const [initialization, condition, update] = loopExpr.split(',').map(s => s.trim());
 
-  let conditionSatisfied = false;
+    // Initialize variables
+    handleAssignment(initialization, env);
 
-  // First, evaluate the condition
-  const evaluateCondition = () => {
+    const evaluateCondition = () => {
+      const conditionTokens = tokenizeExpression(condition);
       const evaluatedCondition = conditionTokens.map(token => {
-          if (token === 'UG') return '&&';
-          if (token === 'O') return '||';
-          if (token === 'DILI') return '!';
-          if (token === '<>') return '!=';
-          if (token === '==') return '==';
-
-          const val = env.get(token);
-          if (val !== null && val !== undefined) return val;
-
-          return token;
+        if (token === 'UG') return '&&';
+        if (token === 'O') return '||';
+        if (token === 'DILI') return '!';
+        if (token === '<>') return '!=';
+        if (token === '==') return '==';
+        const val = env.get(token);
+        if (val !== null && val !== undefined) return val;
+        return token;
       }).join(' ');
 
       try {
-          return eval(evaluatedCondition);  // Evaluate the condition
+        return eval(evaluatedCondition);
       } catch (e) {
-          throw new Error(`Invalid expression in loop condition: "${evaluatedCondition}"`);
+        throw new Error(`Invalid expression in loop condition: "${evaluatedCondition}"`);
       }
-  };
+    };
 
-  // Now evaluate the condition before entering the loop
-  conditionSatisfied = evaluateCondition();
+    let conditionSatisfied = evaluateCondition();
 
-  while (conditionSatisfied) {
+    while (conditionSatisfied) {
+      // Execute statements inside the loop block
       node.block.forEach(statement => {
-          switch (statement.type) {
-              case 'PRINT':
-                  console.log(...handlePrint(statement.expression, env));
-                  break;
-              case 'ASSIGNMENT':
-                  handleAssignment(statement.line, env);
-                  break;
-              default:
-                  throw new Error(`Unsupported statement type in loop block: ${statement.type}`);
-          }
+        switch (statement.type) {
+          case 'PRINT':
+            console.log(...handlePrint(statement.expression, env));
+            break;
+          case 'ASSIGNMENT':
+            handleAssignment(statement.line, env);
+            break;
+          default:
+            throw new Error(`Unsupported statement type in loop block: ${statement.type}`);
+        }
       });
 
-      // Recheck the condition at the end of the loop to decide if we should continue
+      // Handle the update manually
+      if (update.endsWith('++')) {
+        const varName = update.slice(0, -2).trim();
+        const currentVal = env.get(varName);
+        env.assign(varName, currentVal + 1);
+      } else if (update.endsWith('--')) {
+        const varName = update.slice(0, -2).trim();
+        const currentVal = env.get(varName);
+        env.assign(varName, currentVal - 1);
+      } else {
+        // Normal assignment
+        handleAssignment(update, env);
+      }
+
+      // Reevaluate condition
       conditionSatisfied = evaluateCondition();
+    }
+  } else {
+    throw new Error(`Unsupported loop type: ${line}`);
   }
 }
+
+
+
 
 
 

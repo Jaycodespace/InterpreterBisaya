@@ -36,6 +36,7 @@ Ensure you have the following installed:
    - Install the required Node.js dependencies:
      ```bash
      npm install
+     npm install readline-sync
      ```
 
 4. **Run the Program**:

@@ -26,7 +26,7 @@ export function run(ast, env) {
         }
         break;
       case 'LOOP':
-        handleLoop(node.line, env);
+        handleLoop(node, env);
         break;
       default:
         throw new Error(`Unknown node type: ${node.type}`);
@@ -90,6 +90,7 @@ function handleAssignment(line, env) {
   }
 }
 
+
 function handlePrint(expr, env) {
   const parts = expr.split('&').map(p => p.trim());
   const lines = [''];
@@ -125,27 +126,22 @@ function handlePrint(expr, env) {
 }
 
 function handleInput(line, env) {
-    const variables = line.slice(6).split(',').map(v => v.trim());
-  
-    const inputLine = readlineSync.question(`Enter values for ${variables.join(', ')} (separated by commas): `);
-    const inputValues = inputLine.split(',').map(s => s.trim());
-  
-    if (variables.length !== inputValues.length) {
-      throw new Error(`Expected ${variables.length} inputs, got ${inputValues.length}`);
-    }
-  
-    variables.forEach((name, i) => {
+  const variables = line.slice(6).split(',').map(v => v.trim());
+
+  variables.forEach(name => {
       const current = env.variables.get(name);
       if (!current) throw new Error(`Variable '${name}' not declared.`);
-  
-      let val = inputValues[i];
+
+      const inputLine = readlineSync.question(`Enter value for ${name}: `);
+      let val = inputLine.trim();
+
       if (current.type === Types.NUMERO) val = parseInt(val);
       if (current.type === Types.TINUOD) val = val.toUpperCase() === 'OO';
       if (current.type === Types.LETRA) val = cleanLiteral(val);
-  
+
       env.assign(name, val);
-    });
-  }
+  });
+}
   
   
 function tokenizeExpression(expr) {
@@ -229,6 +225,65 @@ function handleConditional(node, env) {
 
 
 
-function handleLoop(line, env) {
-    // LOOP LOGIC TO BE IMPLEMENTED
+function handleLoop(node, env) {
+  const line = node.line;  // The line associated with the loop (should be a string)
+
+  if (typeof line !== 'string') {
+      throw new Error(`Expected a string for loop condition, but got: ${typeof line}`);
+  }
+
+  // Ensure line is in the expected format
+  const conditionExpr = line.slice(7).trim(); // Remove "SAMTANG " from the start
+  const conditionTokens = tokenizeExpression(conditionExpr); // Tokenize the condition expression
+
+  let conditionSatisfied = false;
+
+  // First, evaluate the condition
+  const evaluateCondition = () => {
+      const evaluatedCondition = conditionTokens.map(token => {
+          if (token === 'UG') return '&&';
+          if (token === 'O') return '||';
+          if (token === 'DILI') return '!';
+          if (token === '<>') return '!=';
+          if (token === '==') return '==';
+
+          const val = env.get(token);
+          if (val !== null && val !== undefined) return val;
+
+          return token;
+      }).join(' ');
+
+      try {
+          return eval(evaluatedCondition);  // Evaluate the condition
+      } catch (e) {
+          throw new Error(`Invalid expression in loop condition: "${evaluatedCondition}"`);
+      }
+  };
+
+  // Now evaluate the condition before entering the loop
+  conditionSatisfied = evaluateCondition();
+
+  while (conditionSatisfied) {
+      node.block.forEach(statement => {
+          switch (statement.type) {
+              case 'PRINT':
+                  console.log(...handlePrint(statement.expression, env));
+                  break;
+              case 'ASSIGNMENT':
+                  handleAssignment(statement.line, env);
+                  break;
+              default:
+                  throw new Error(`Unsupported statement type in loop block: ${statement.type}`);
+          }
+      });
+
+      // Recheck the condition at the end of the loop to decide if we should continue
+      conditionSatisfied = evaluateCondition();
+  }
 }
+
+
+
+
+
+

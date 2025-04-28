@@ -1,0 +1,18 @@
+SUGOD
+MUGNA NUMERO i
+MUGNA NUMERO sum
+MUGNA NUMERO limit
+
+DAWAT: limit
+i = 1
+sum = 0
+
+SAMTANG (i <= limit)
+PUNDOK{
+    sum = sum + i
+    IPAKITA: "Current value of sum: " & sum
+    i = i + 1
+}
+
+IPAKITA: "Final sum: " & sum
+KATAPUSAN

@@ -30,13 +30,20 @@ export function parse(tokens) {
                 }
                 i++;
             }
-
             ast.push(conditionalNode);
-        } else if (line.startsWith('SAMTANG')) {
-            // Parse the loop block
+        }else if (line.startsWith('ALANG SA')) {
+            // Handle ALANG SA (for loop) explicitly
             const loopNode = { type: 'LOOP', line, block: [] };
-            i++; // Move to the next line to parse the block
+            const loopExpr = line.slice(9, -1).trim(); // Remove "ALANG SA (" and ")"
+            const [initialization, condition, update] = loopExpr.split(',').map(s => s.trim());
 
+            // Create a proper representation for the loop
+            loopNode.initialization = initialization;
+            loopNode.condition = condition;
+            loopNode.update = update;
+
+            // Parse the block after the condition
+            i++; // Move to the next line to parse the block
             while (i < lines.length && !lines[i].trim().startsWith('}')) {
                 const statementLine = lines[i].trim();
                 if (statementLine.startsWith('IPAKITA:')) {

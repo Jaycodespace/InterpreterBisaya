@@ -4,6 +4,7 @@ import readlineSync from 'readline-sync';
 
 export function run(ast, env) {
   const output = [];
+  let conditionSatisfied = false; // Track if a condition has been satisfied
 
   ast.forEach(node => {
     switch (node.type) {
@@ -20,7 +21,9 @@ export function run(ast, env) {
         handleInput(node.line, env);
         break;
       case 'CONDITIONAL':
-        handleConditional(node.line, env);
+        if (!conditionSatisfied) {
+          conditionSatisfied = handleConditional(node, env); // Execute only if no prior condition was satisfied
+        }
         break;
       case 'LOOP':
         handleLoop(node.line, env);
@@ -151,9 +154,80 @@ function tokenizeExpression(expr) {
 }
 
 
-function handleConditional(line, env) {
-    // CONDITIONAL LOGIC TO BE IMPLEMENTED
+function handleConditional(node, env) {
+  const line = node.line;
+
+  // Validate the line
+  if (!line || typeof line !== 'string') {
+    throw new Error(`Invalid or missing line in CONDITIONAL node: ${JSON.stringify(node)}`);
+  }
+
+  // Remove "KUNG" from the start
+  const conditionPart = line.slice(4).trim(); // Remove "KUNG", left with "edad > 18 PUNDOK{"
+
+  // Ensure it ends with "PUNDOK{"
+  if (!conditionPart.endsWith('PUNDOK{')) {
+    throw new Error(`Invalid KUNG syntax: ${line}`);
+  }
+
+  // Remove "PUNDOK{" from the end
+  const conditionExpression = conditionPart.slice(0, -7).trim(); // Remove "PUNDOK{" (7 characters)
+
+  // Evaluate the condition
+  const [left, operator, right] = conditionExpression.split(/\s+/);
+
+  const leftValue = env.get(left) ?? Number(left);
+  const rightValue = env.get(right) ?? Number(right);
+
+  let result = false;
+  switch (operator) {
+    case '==':
+      result = leftValue == rightValue;
+      break;
+    case '!=':
+      result = leftValue != rightValue;
+      break;
+    case '>':
+      result = leftValue > rightValue;
+      break;
+    case '<':
+      result = leftValue < rightValue;
+      break;
+    case '>=':
+      result = leftValue >= rightValue;
+      break;
+    case '<=':
+      result = leftValue <= rightValue;
+      break;
+    default:
+      throw new Error(`Unsupported operator in KUNG: ${operator}`);
+  }
+
+  // If the condition is true, execute the block and return true
+  if (result) {
+    if (!node.block || !Array.isArray(node.block)) {
+      throw new Error(`Missing or invalid block in CONDITIONAL node: ${JSON.stringify(node)}`);
+    }
+
+    node.block.forEach(statement => {
+      switch (statement.type) {
+        case 'PRINT':
+          console.log(...handlePrint(statement.expression, env));
+          break;
+        case 'ASSIGNMENT':
+          handleAssignment(statement.line, env);
+          break;
+        default:
+          throw new Error(`Unsupported statement type in conditional block: ${statement.type}`);
+      }
+    });
+    return true;
+  }
+
+  return false;
 }
+
+
 
 function handleLoop(line, env) {
     // LOOP LOGIC TO BE IMPLEMENTED

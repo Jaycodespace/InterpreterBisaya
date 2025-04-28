@@ -122,27 +122,22 @@ function handlePrint(expr, env) {
 }
 
 function handleInput(line, env) {
-    const variables = line.slice(6).split(',').map(v => v.trim());
-  
-    const inputLine = readlineSync.question(`Enter values for ${variables.join(', ')} (separated by commas): `);
-    const inputValues = inputLine.split(',').map(s => s.trim());
-  
-    if (variables.length !== inputValues.length) {
-      throw new Error(`Expected ${variables.length} inputs, got ${inputValues.length}`);
-    }
-  
-    variables.forEach((name, i) => {
+  const variables = line.slice(6).split(',').map(v => v.trim());
+
+  variables.forEach(name => {
       const current = env.variables.get(name);
       if (!current) throw new Error(`Variable '${name}' not declared.`);
-  
-      let val = inputValues[i];
+
+      const inputLine = readlineSync.question(`Enter value for ${name}: `);
+      let val = inputLine.trim();
+
       if (current.type === Types.NUMERO) val = parseInt(val);
       if (current.type === Types.TINUOD) val = val.toUpperCase() === 'OO';
       if (current.type === Types.LETRA) val = cleanLiteral(val);
-  
+
       env.assign(name, val);
-    });
-  }
+  });
+}
   
   
 function tokenizeExpression(expr) {

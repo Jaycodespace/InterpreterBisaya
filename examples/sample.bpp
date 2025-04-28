@@ -1,0 +1,13 @@
+SUGOD
+MUGNA NUMERO edad
+DAWAT: edad
+KUNG edad > 18 PUNDOK{
+    IPAKITA: "You are an adult."
+}
+KUNG DILI edad < 18 PUNDOK{
+    IPAKITA: "You are a minor."
+}
+KUNG WALA PUNDOK{
+    IPAKITA: "You are 18 years old."
+}
+KATAPUSAN

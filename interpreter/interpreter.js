@@ -150,27 +150,41 @@ function tokenizeExpression(expr) {
 }
 
 
-function handleConditional(node, env) {
-  const line = node.line;
+function handleConditional(node, env, previousConditionResult = false) {
+  // If this is a "KUNG WALA" block, execute only if no previous condition was true
+  if (node.isElse) {
+    if (!previousConditionResult) {
+      if (!node.block || !Array.isArray(node.block)) {
+        throw new Error(`Missing or invalid block in CONDITIONAL node: ${JSON.stringify(node)}`);
+      }
 
-  // Validate the line
-  if (!line || typeof line !== 'string') {
-    throw new Error(`Invalid or missing line in CONDITIONAL node: ${JSON.stringify(node)}`);
+      node.block.forEach(statement => {
+        switch (statement.type) {
+          case 'PRINT':
+            console.log(...handlePrint(statement.expression, env));
+            break;
+          case 'ASSIGNMENT':
+            handleAssignment(statement.line, env);
+            break;
+          default:
+            throw new Error(`Unsupported statement type in conditional block: ${statement.type}`);
+        }
+      });
+      return true; // Mark this block as executed
+    }
+    return false; // Skip execution if a previous condition was true
   }
 
-  // Remove "KUNG" from the start
-  const conditionPart = line.slice(4).trim(); // Remove "KUNG", left with "edad > 18 PUNDOK{"
+  // Handle regular "KUNG" or "KUNG DILI" blocks with conditions
+  const conditionExpression = node.condition;
 
-  // Ensure it ends with "PUNDOK{"
-  if (!conditionPart.endsWith('PUNDOK{')) {
-    throw new Error(`Invalid KUNG syntax: ${line}`);
+  // Extract the condition using a regular expression
+  const conditionMatch = conditionExpression.match(/^(.+?)\s*(==|!=|>|<|>=|<=)\s*(.+)$/);
+  if (!conditionMatch) {
+    throw new Error(`Invalid condition format in KUNG: ${conditionExpression}`);
   }
 
-  // Remove "PUNDOK{" from the end
-  const conditionExpression = conditionPart.slice(0, -7).trim(); // Remove "PUNDOK{" (7 characters)
-
-  // Evaluate the condition
-  const [left, operator, right] = conditionExpression.split(/\s+/);
+  const [, left, operator, right] = conditionMatch;
 
   const leftValue = env.get(left) ?? Number(left);
   const rightValue = env.get(right) ?? Number(right);
@@ -217,10 +231,10 @@ function handleConditional(node, env) {
           throw new Error(`Unsupported statement type in conditional block: ${statement.type}`);
       }
     });
-    return true;
+    return true; // Mark this block as executed
   }
 
-  return false;
+  return false; // Condition was false, no block executed
 }
 
 

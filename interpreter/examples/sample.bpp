@@ -1,4 +1,16 @@
 SUGOD
+	MUGNA NUMERO a = 1, b
+	MUGNA LETRA as = 'x'
+	ALANG SA (a=1, a<=5, a++)
+	PUNDOK{
+		ALANG SA (b=1, b<=a, b++)
+		PUNDOK{
+			IPAKITA: a
+		}
+		IPAKITA: $
+	}
+KATAPUSAN
+SUGOD
 MUGNA NUMERO x, y
 DAWAT: x, y
 MUGNA NUMERO result

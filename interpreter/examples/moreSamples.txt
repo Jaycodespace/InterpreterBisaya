@@ -32,3 +32,10 @@ result = x + y
 IPAKITA: "The sum of " & x & " and " & y & " is " & result
 KATAPUSAN
 
+SUGOD
+MUGNA NUMERO ctr
+ALANG SA (ctr=1, ctr<=10, ctr=ctr+1)
+PUNDOK{
+  IPAKITA: ctr & ' '
+}
+KATAPUSAN

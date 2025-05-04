@@ -1,17 +1,12 @@
 SUGOD
-MUGNA NUMERO ctr
-MUGNA NUMERO sum = 0
-MUGNA NUMERO average = 0
-
-ALANG SA (ctr = 0, ctr < 10, ctr++)
-PUNDOK{
-    sum = sum + ctr
-}
-sum = sum + ctr
-
-average = sum / 11
-
-IPAKITA: sum
-IPAKITA: ctr
-IPAKITA: average
+	MUGNA NUMERO a = 1, b
+	MUGNA LETRA as = 'x'
+	ALANG SA (a=1, a<=5, a++)
+	PUNDOK{
+		ALANG SA (b=1, b<=a, b++)
+		PUNDOK{
+			IPAKITA: a
+		}
+		IPAKITA: $
+	}
 KATAPUSAN

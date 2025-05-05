@@ -21,6 +21,9 @@
         case 'INPUT':
           handleInput(node.line, env);
           break;
+        case 'CONDITIONAL':
+          handleConditionals(node, env, output);
+          break;
         case 'FOR_LOOP':
           handleLoop(node, env, output);
           break;
@@ -179,75 +182,104 @@
   
    
   function handleLoop(node, env, output) {
-    handleAssignment(node.init, env); // Initialize loop vars
+    // Initialize loop variables (e.g., a=1)
+    handleAssignment(node.init, env);
   
+    // Run the loop while the condition is true
     while (evaluateTokens(tokenizeExpression(node.condition), env)) {
+      // Execute the body of the loop
       const bodyTokens = tokenize(node.body.join('\n'));
       const bodyAst = parse(bodyTokens);
   
+      // Collect and run body output
       const iterationOutput = run(bodyAst, env);
-      output.push(iterationOutput.join('')); // <== Join outputs into one line
+      
+      // Append the loop's result to output
+      output.push(iterationOutput.join('')); // Concatenate output for one line
+  
+      // Update loop variable (e.g., a++)
       if (node.update) {
         handleIncDec(node.update, env);
       }
     }
   }
   
-  
-  
 
+  function handleConditionals(node, env, output) {
+    for (const branch of node.branches) {
+      if (branch.type === 'IF' || branch.type === 'ELSE_IF') {
+        const condition = evaluateTokens(tokenizeExpression(branch.condition), env);
+        if (condition) {
+          const bodyAst = parse(tokenize(branch.body.join('\n')));
+          const result = run(bodyAst, env);
+          output.push(...result);
+          break;
+        }
+      } else if (branch.type === 'ELSE') {
+        const bodyAst = parse(tokenize(branch.body.join('\n')));
+        const result = run(bodyAst, env);
+        output.push(...result);
+        break;
+      }
+    }
+  }
+  
   function tokenizeExpression(expr) {
-    const regex = /[a-zA-Z_]\w*|==|<>|[><]=?|[()+\-*/%]|UG|O|DILI|\+\+|--|\d+/g;
+    const regex = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[a-zA-Z_]\w*|==|<>|[><]=?|[()+\-*/%]|UG|O|DILI|\+\+|--|\d+(\.\d+)?/g;
     return expr.match(regex) || [];
   }
+  
 
   function evaluateTokens(tokens, env) {
     const jsExpr = tokens.map(token => {
       switch (token) {
-        case 'UG':    return '&&';
-        case 'O':     return '||';
-        case 'DILI':  return '!';
-        case '<>':    return '!=';
-        case '==':    return '==';
+        case 'UG': return '&&';
+        case 'O': return '||';
+        case 'DILI': return '!';
+        case '<>': return '!=';
+        case '==': return '==';
         default:
-          // if it's an identifier
+          // ✅ Handle string literals (e.g., 'a' or "a")
+          if (/^["'].*["']$/.test(token)) {
+            return token; // keep as is, quotes included
+          }
+  
+          // ✅ Handle boolean literals
+          if (token === 'OO') return 'true';
+          if (token === 'DILI') return 'false';
+  
+          // ✅ Handle variable
           if (/^[a-zA-Z_]\w*$/.test(token)) {
             if (!env.variables.has(token)) {
               throw new Error(`Variable '${token}' is not defined.`);
             }
-            const val = env.get(token);
-            // Allow null or '' (declared but uninitialized)
-            return JSON.stringify(val);
+            return JSON.stringify(env.get(token)); // wrap value in JS literal
           }
-          // number literal or operator/paren
+  
+          // ✅ Otherwise: number or operator
           return token;
       }
     }).join(' ');
-
+  
     try {
       return eval(jsExpr);
     } catch (e) {
       throw new Error(`Invalid expression: ${jsExpr}`);
     }
   }
-
-
+  
+  
   function handlePrint(expr, env) {
-    // 1. Build a list of meaningful segments:
-    //    - [x] escape codes
-    //    - "…" or '…' string literals
-    //    - $ newline markers
-    //    - & concatenators (we'll skip them later)
-    //    - anything else
     const segments = [];
     let buf = '';
     let i = 0;
   
+    // 1) Tokenize into meaningful segments
     while (i < expr.length) {
       // a) Escape code [x]
-      if (expr[i] === '[' && i + 2 < expr.length && expr[i + 2] === ']') {
+      if (expr[i] === '[' && i + 2 < expr.length && expr[i+2] === ']') {
         if (buf) { segments.push(buf); buf = ''; }
-        segments.push(expr.slice(i, i + 3)); // e.g. "[&]"
+        segments.push(expr.slice(i, i+3));
         i += 3;
         continue;
       }
@@ -258,12 +290,12 @@
         let j = i + 1;
         while (j < expr.length && expr[j] !== quote) j++;
         if (buf) { segments.push(buf); buf = ''; }
-        segments.push(expr.slice(i, j + 1)); // e.g. '"hello"'
+        segments.push(expr.slice(i, j+1));
         i = j + 1;
         continue;
       }
   
-      // c) Concatenator
+      // c) Concatenator &
       if (expr[i] === '&') {
         if (buf) { segments.push(buf); buf = ''; }
         segments.push('&');
@@ -271,60 +303,76 @@
         continue;
       }
   
-      // d) Everything else (identifiers, numbers, operators, $)
+      // d) Newline marker $
+      if (expr[i] === '$') {
+        if (buf) { segments.push(buf); buf = ''; }
+        segments.push('$');
+        i++;
+        continue;
+      }
+  
+      // e) Everything else
       buf += expr[i++];
     }
     if (buf) segments.push(buf);
   
-    // 2. Process each segment and build the output line
+    // 2) Drop any pure‐whitespace segments
+    const cleanSegments = segments.filter(s => s.trim() !== '');
+  
+    // 3) Build the line, replacing $ with real newlines
     let line = '';
-    for (const seg of segments) {
+    for (const seg of cleanSegments) {
       if (seg === '&') {
-        // concatenator: skip, since we're just building one line
+        // concatenator: do nothing
         continue;
       }
-  
       if (seg === '$') {
-        // newline marker: we don't need this in the loop, so skip it
+        line += '\n';
         continue;
       }
   
-      // Escape code
+      // escape code [x]
       const m = seg.match(/^\[(.)\]$/);
       if (m) {
         line += m[1];
         continue;
       }
   
-      // String literal
+      // string literal
       if (/^".*"$|^'.*'$/.test(seg)) {
         line += cleanLiteral(seg);
         continue;
       }
   
-      // Identifier
+      // identifier
       if (/^[a-zA-Z_]\w*$/.test(seg)) {
         const v = env.get(seg);
         if (v === undefined) throw new Error(`Variable '${seg}' is not defined.`);
-        if (v === true) { line += 'OO'; continue; }
+        if (v === true)  { line += 'OO'; continue; }
         if (v === false) { line += 'DILI'; continue; }
         line += String(v);
         continue;
       }
   
-      // Numeric literal
+      // numeric literal
       if (/^[+-]?\d+(\.\d+)?$/.test(seg)) {
         line += seg;
         continue;
       }
   
-      // Otherwise: an expression, evaluate it
+      // otherwise, evaluate as expression
       const val = evaluateTokens(tokenizeExpression(seg), env);
       line += String(val);
     }
   
-    // 3. Return as single-element array so run()'s output.push(... ) is correct
-    return [line];
+    // 4) Split out any internal newlines into separate lines
+    return line
+      .split('\n')
+      .filter(l => l !== '');
   }
+  
+  
+  
+  
   
   

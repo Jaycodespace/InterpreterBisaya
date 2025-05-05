@@ -179,23 +179,20 @@
   
    
   function handleLoop(node, env, output) {
-    handleAssignment(node.init, env); // Initialize the loop variables
+    handleAssignment(node.init, env); // Initialize loop vars
   
-    // Start the loop and evaluate the condition
     while (evaluateTokens(tokenizeExpression(node.condition), env)) {
-      // Process the body of the loop (including nested loops)
       const bodyTokens = tokenize(node.body.join('\n'));
       const bodyAst = parse(bodyTokens);
-      
-      // Execute the body of the loop (it will handle nested loops)
-      output.push(...run(bodyAst, env));
   
-      // Increment/Decrement logic (this is where we handle ++/--)
+      const iterationOutput = run(bodyAst, env);
+      output.push(iterationOutput.join('')); // <== Join outputs into one line
       if (node.update) {
-        handleIncDec(node.update, env); // Handle the increment/decrement in the update
+        handleIncDec(node.update, env);
       }
     }
   }
+  
   
   
 

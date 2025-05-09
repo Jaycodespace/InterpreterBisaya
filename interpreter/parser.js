@@ -60,7 +60,6 @@ function parseForLoop(lines, startIndex) {
 }
 
 function parseConditional(lines, startIndex) {
-  // Initialize an empty array to store the parsed branches (IF, ELSE_IF, ELSE)
   const branches = [];
 
   // Start parsing from the given line index

@@ -62,62 +62,47 @@ function parseForLoop(lines, startIndex) {
 function parseConditional(lines, startIndex) {
   const branches = [];
 
-  // Start parsing from the given line index
   let i = startIndex;
 
   // Loop through the lines starting at startIndex
   while (i < lines.length) {
-    // Trim whitespace from the current line
     let line = lines[i].trim();
 
-    // Check for ELSE IF branch (Bisaya: "KUNG DILI")
     if (line.startsWith('KUNG DILI')) {
-      // Extract the condition inside parentheses
       const cond = line.match(/\(([^)]+)\)/);
       if (!cond) throw new Error(`Invalid KUNG DILI condition`);
-
       // Parse the block of code that follows this condition
       const { body, nextIndex } = parseBlock(lines, i + 1);
-
       // Add the parsed ELSE_IF branch to the branches array
       branches.push({ type: 'ELSE_IF', condition: cond[1], body });
-
-      // Move to the next unparsed line
       i = nextIndex;
 
-    // Check for ELSE branch (Bisaya: "KUNG WALA")
+
     } else if (line.startsWith('KUNG WALA')) {
       // Parse the block of code that follows this else
       const { body, nextIndex } = parseBlock(lines, i + 1);
-
       // Add the parsed ELSE branch (no condition) to the branches array
       branches.push({ type: 'ELSE', body });
-
       // Move to the next unparsed line
       i = nextIndex;
 
-    // Check for IF branch (Bisaya: "KUNG")
+
     } else if (line.startsWith('KUNG')) {
-      // Extract the condition inside parentheses
       const cond = line.match(/\(([^)]+)\)/);
       if (!cond) throw new Error(`Invalid KUNG condition`);
-
       // Parse the block of code that follows this condition
       const { body, nextIndex } = parseBlock(lines, i + 1);
-
       // Add the parsed IF branch to the branches array
       branches.push({ type: 'IF', condition: cond[1], body });
 
       // Move to the next unparsed line
       i = nextIndex;
-
-    // If none of the conditions match, exit the loop
     } else {
       break;
     }
   }
 
-  // Return the constructed conditional node and the index of the next unparsed line
+  // Return the constructed conditional node 
   return { node: { type: 'CONDITIONAL', branches }, nextIndex: i };
 }
 

@@ -61,48 +61,35 @@ function parseForLoop(lines, startIndex) {
 
 function parseConditional(lines, startIndex) {
   const branches = [];
-
   let i = startIndex;
-
-  // Loop through the lines starting at startIndex
   while (i < lines.length) {
     let line = lines[i].trim();
 
     if (line.startsWith('KUNG DILI')) {
       const cond = line.match(/\(([^)]+)\)/);
       if (!cond) throw new Error(`Invalid KUNG DILI condition`);
-      // Parse the block of code that follows this condition
       const { body, nextIndex } = parseBlock(lines, i + 1);
-      // Add the parsed ELSE_IF branch to the branches array
       branches.push({ type: 'ELSE_IF', condition: cond[1], body });
       i = nextIndex;
 
 
     } else if (line.startsWith('KUNG WALA')) {
-      // Parse the block of code that follows this else
       const { body, nextIndex } = parseBlock(lines, i + 1);
-      // Add the parsed ELSE branch (no condition) to the branches array
       branches.push({ type: 'ELSE', body });
-      // Move to the next unparsed line
       i = nextIndex;
 
 
     } else if (line.startsWith('KUNG')) {
       const cond = line.match(/\(([^)]+)\)/);
       if (!cond) throw new Error(`Invalid KUNG condition`);
-      // Parse the block of code that follows this condition
       const { body, nextIndex } = parseBlock(lines, i + 1);
-      // Add the parsed IF branch to the branches array
       branches.push({ type: 'IF', condition: cond[1], body });
-
-      // Move to the next unparsed line
       i = nextIndex;
     } else {
       break;
     }
   }
 
-  // Return the constructed conditional node 
   return { node: { type: 'CONDITIONAL', branches }, nextIndex: i };
 }
 

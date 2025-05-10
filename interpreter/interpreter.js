@@ -206,28 +206,17 @@
   
 
   function handleConditionals(node, env, output) {
-    //loop sa each conditional
     for (const branch of node.branches) {
-      //check kung ang conditional kay if or else if
       if (branch.type === 'IF' || branch.type === 'ELSE_IF') {
-        //tokenize then evaluate ang condition
         const condition = evaluateTokens(tokenizeExpression(branch.condition), env);
-        //kung true siya, execute ang branch
         if (condition) {
-          //tokenize then parse it to AST
           const bodyAst = parse(tokenize(branch.body.join('\n')));
-          //run ang parse AST then store sa result
           const result = run(bodyAst, env);
-          //append sa outpit
           output.push(...result);
-          //break if na execute na
           break;
         }
-        //pero kung ELSE, lahos na
       } else if (branch.type === 'ELSE') {
-        //tokenize then parse it to AST
         const bodyAst = parse(tokenize(branch.body.join('\n')));
-        //run ang parse AST then store sa result
         const result = run(bodyAst, env);
         output.push(...result);
         break;

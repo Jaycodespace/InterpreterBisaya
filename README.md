@@ -1,4 +1,4 @@
-# Bisaya++ Interpreter
+# Bisaya++ Interpreter (JaBAIscript)
 
 ## Overview
 

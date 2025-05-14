@@ -24,7 +24,7 @@ async function main() {
       throw new Error(`Program must end with 'KATAPUSAN'. Found: '${lastLine}'`);
     }
 
-    const bodyTokens = tokens.slice(1, -1); // Remove SUGOD and KATAPUSAN
+    const bodyTokens = tokens.slice(1, -1); 
     const ast = parse(bodyTokens);
     const env = new Environment();
     const output = run(ast, env);

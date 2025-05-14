@@ -90,6 +90,8 @@ function parseConditional(lines, startIndex) {
   return { node: { type: 'CONDITIONAL', branches }, nextIndex: i };
 }
 
+
+
 function parseBlock(lines, startIndex) {
   if (lines[startIndex].trim() !== 'PUNDOK{') throw new Error(`Expected PUNDOK{`);
   const body = [];

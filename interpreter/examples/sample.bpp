@@ -1,12 +1,15 @@
 SUGOD
-	MUGNA NUMERO a = 1, b
-	MUGNA LETRA as = 'x'
-	ALANG SA (a=1, a<=5, a++)
-	PUNDOK{
-		ALANG SA (b=1, b<=a, b++)
-		PUNDOK{
-			IPAKITA: a
-		}
-		IPAKITA: $
-	}
+ 
+  MUGNA NUMERO x, y
+  DAWAT: x
+ 
+  ALANG SA (y = 0, y <= x, y++) 
+  PUNDOK{
+ 
+    KUNG (y > 5)
+    PUNDOK{
+      IPAKITA: y
+    }
+ 
+  }
 KATAPUSAN
